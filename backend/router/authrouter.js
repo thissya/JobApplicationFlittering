@@ -89,7 +89,7 @@ authRouter.post('/resume', async (req, res) => {
             resume: resume
         });
         await data.save();
-        res.status(200).send("Successfully data entered"+data);
+        res.status(200).send("Successfully data entered "+data);
     } catch (e) {
         console.log(e);
         res.status(404).send("Error occurred");
