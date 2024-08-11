@@ -16,10 +16,10 @@ const userSchema= new mongoose.Schema({
     },
     role:{
         type:String,
-        default:'user'
+        default:"user"
     }
 })
 
 mongoose.connect('mongodb://localhost:27017');
 const User=mongoose.model("User",userSchema)
-module.exports= { User };
+module.exports= User

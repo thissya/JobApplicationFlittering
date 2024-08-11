@@ -4,6 +4,7 @@ const jwt = require('jsonwebtoken');
 const Resume=require('../model/Resume')
 const User= require('../model/User');
 const { auth, authAdmin } = require('../middleware/auth');
+require('dotenv').config();
 
 const authRouter = new express.Router();
 
@@ -11,7 +12,7 @@ authRouter.get('/check', auth, (req, res) => {
     res.status(200).send(req.email);
 });
 
-authRouter.post('/signin', async (req, res) => {
+authRouter.post('/login', async (req, res) => {
     try {
         const { email, password } = req.body;
         if (!email || !password) {
@@ -35,6 +36,42 @@ authRouter.post('/signin', async (req, res) => {
         res.status(400).send("Internal Server Error");
     }
 });
+
+authRouter.post('/admin/login',async(req,res)=>{
+    try{
+        const{email,password}=req.body;
+        if(!email || !password)
+        {
+            res.status(404).send("Enter Login Credentials");
+            return;
+        }
+        const data= await User.findOne({email:email});
+        if(!data)
+        {
+            res.status(404).send("User Not Found");
+            return;
+        }
+        if(data.role!=='admin')
+        {
+            res.status(403).send("Access Denied");
+            return;
+        }
+        const match = await bcrypt.compare(password,data.password);
+        if(match)
+        {
+            const token=jwt.sign({user :email , role:data.role},process.env.JWT_SECRET,{expiresIn:"24h"});
+            res.status(200).send({message:"Admin Login Successful",token:token});
+        }
+        else{
+            res.status(404).send("Invalid Credentials");
+        }
+    }
+    catch(e)
+    {
+        console.log(e);
+        res.status(400).send("Internal Server Error");
+    }
+})
 
 authRouter.post('/signup', async (req, res) => {
     try {
@@ -89,7 +126,7 @@ authRouter.post('/resume', async (req, res) => {
             resume: resume
         });
         await data.save();
-        res.status(200).send("Successfully data entered "+data);
+        res.status(200).send("Successfully data entered"+data);
     } catch (e) {
         console.log(e);
         res.status(404).send("Error occurred");
